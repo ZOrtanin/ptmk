@@ -1,5 +1,5 @@
 
-def newUI():
+def newUI(arg):
     if (arg[1] == '--mode'):
 
         # Парсим аргументы командной строки

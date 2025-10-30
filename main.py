@@ -6,85 +6,17 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker
 from faker import Faker
 
+from people import People
+import model, database
 
-import model
+# База данных
+db = database.BaseDB(True)
 
 # Создаём объект Faker для русского языка
 fake = Faker('ru_RU')
 
 # Счетчик рандомных фамилий
 letter_count = 0
-
-
-class People(object):
-    """ Клас человека """
-    def __init__(self, arg):
-        super(People, self).__init__()
-        self.fio = arg.get('fio') 
-        self.birth_date = self.getDate(arg.get('birth_date')) 
-        self.gender = arg.get('gender')
-        self.age = self.getAge()
-
-    def getDate(self, date) -> str:
-        if date is None: return None
-        return datetime.strptime(date, '%Y-%m-%d').date()
-
-    def getAge(self) -> str:
-        # проверка на пустоту
-        if self.birth_date is None: return None
-        # получаем полные года        
-        now = datetime.strptime(str(datetime.now().date()), '%Y-%m-%d').date()
-        age = (now - self.birth_date).days  # возраст в днях
-
-        return str(round((age/365)//1))
-
-    def addTable(self) -> bool:
-        # Создаём сессию
-        Session = sessionmaker(bind=model.engine)
-        session = Session()
-
-        # Добавляем запись
-        try:            
-            person = model.Person(
-                    fio=self.fio, 
-                    birth_date=self.birth_date, 
-                    gender=self.gender
-                    )
-
-            session.add(person)
-            session.commit()
-            print(f"Запись: {self.fio}, {self.birth_date}, {self.gender}")
-        except Exception as e:
-            print(f"Ошибка: {e}")
-            session.rollback()
-            return False
-        finally:
-            session.close()
-
-        return True
-
-    def addTableArr(self, arr) -> bool:
-        # Создаём сессию
-        Session = sessionmaker(bind=model.engine)
-        session = Session()
-
-        try:
-            # Пакетная вставка
-            session.bulk_save_objects(arr)
-
-            # Фиксируем изменения
-            session.commit()
-            result = f" {len(arr)} Запись добавленна" if len(arr) == 1 else f" {len(arr)} Записи добавленно"
-            print(result)
-
-        except Exception as e:
-            print(f"Ошибка: {e}")
-            session.rollback()
-            return False
-        finally:
-            session.close()
-
-        return True
 
 
 # mode 0
@@ -173,8 +105,8 @@ def addPeoples(arg):
 
 # mode 3
 def getAll() -> None:
-    # Получаем всех отсортированных по ФИО
-    people = dbGet(None, None, [model.Person.fio.asc()])    
+    # Получаем всех отсортированных по ФИО    
+    people = db.dataGet(None, None, [model.Person.fio.asc()])    
 
     # Выводим данные
     for person in people:
@@ -222,7 +154,7 @@ def getMaleF(arg) -> None:
         model.Person.fio.startswith(letter)  # Фильтр: фамилия начинается на "F"
     ]
 
-    peoples = dbGet(filters, custom_filters)
+    peoples = db.dataGet(filters, custom_filters)
     
     if print_list:
         # print(len(peoples), '- количество полученных строк','\n')
@@ -252,7 +184,7 @@ def getAllLetter() -> None:
             model.Person.fio.startswith(letter) 
         ]
 
-        peoples = dbGet(None, custom_filters)
+        peoples = db.dataGet(None, custom_filters)
         print(len(peoples), f"колличество - {letter}")
 
 
@@ -263,13 +195,13 @@ def getAllMale() -> None:
     # Получаем всех male
     filters = {"gender": "Male"}
     custom_filters = None
-    people = dbGet(filters, custom_filters)
+    people = db.dataGet(filters, custom_filters)
     print(len(people), 'Мужчин')
 
     # Получаем всех male
     filters = {"gender": "Female"}
     custom_filters = None
-    people = dbGet(filters, custom_filters)
+    people = db.dataGet(filters, custom_filters)
     print(len(people), 'Женщин')
 
     print(round(time.time() - starttime, 5), "сек Затрачено на выполнение запроса")
@@ -309,30 +241,6 @@ def addRandom(count=100, f=False, arg=None) -> None:
 
 
 # helps functions
-def dbGet(filters=None, custom_filters=None, order=None):
-    # Создаём сессию
-    Session = sessionmaker(bind=model.engine)
-    session = Session()
-
-    # Собераем запрос
-    query = session.query(model.Person)
-
-    if filters:
-        query = query.filter_by(**filters)
-
-    if custom_filters:
-        query = query.filter(*custom_filters)
-
-    if order:
-        query = query.order_by(*order)
-
-    result = query.all()
-    
-    session.close()
-
-    return result
-
-
 def translateStr(string) -> str:
     translit_dict = {
             'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
