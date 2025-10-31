@@ -1,4 +1,5 @@
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 import model
 
 
@@ -7,7 +8,21 @@ class BaseDB:
         self.arg = arg
         self.Session = sessionmaker(bind=model.engine)
 
+    def create_partial_index(self) -> None:
+        ''' Добовляем индексы в базу '''
+
+        session = self.Session()
+        query = text("""
+            CREATE INDEX IF NOT EXISTS idx_my_fantasy
+            ON people (fio, gender)
+            WHERE SUBSTR(fio, 1, 1) = 'F';
+        """)
+        session.execute(query)
+        session.commit()
+
     def addTable(self, fio, birth_date, gender) -> bool:
+        ''' Запись одной строки в базу '''
+
         # Открываем сессию
         session = self.Session()
 
@@ -31,6 +46,8 @@ class BaseDB:
         return True
 
     def addTableArr(self, arr) -> bool:
+        ''' Запись списка в базу '''
+
         session = self.Session()
 
         try:
@@ -51,7 +68,9 @@ class BaseDB:
 
         return True
 
-    def dataGet(self, filters=None, custom_filters=None, order=None):
+    def dataGet(self, filters=None, custom_filters=None, order=None) -> object:
+        ''' Получаем составной запрос к базе в ответ объекты '''
+
         # Открываем сессию
         session = self.Session()
 
@@ -73,3 +92,23 @@ class BaseDB:
         session.close()
 
         return result
+
+    def dataGetRaw(self, gender=None, letter=None) -> tuple:
+        ''' Получаем параметры для поиска по базе в ответ кортедж '''
+
+        # Открываем сессию
+        session = self.Session()
+
+        # Собераем запрос
+        query = text("SELECT * FROM people WHERE gender = :gender AND SUBSTR(fio, 1, 1) = :letter")
+        
+        # query = text("SELECT * FROM people WHERE fio LIKE 'F%' AND gender = 'Male'")
+
+        result = session.execute(query, {'gender': gender, 'letter': letter})
+
+        rows = result.fetchall()
+
+        # Закрываем сессию
+        session.close()
+
+        return rows

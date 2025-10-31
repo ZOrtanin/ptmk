@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, Column, String, Date, Integer
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine
 from datetime import datetime
 
 # Определяем базовую модель
@@ -13,16 +14,16 @@ class Person(Base):
     birth_date = Column(Date, nullable=False)
     gender = Column(String, nullable=False)
 
-    def __init__(self, arg):
+    def __init__(self, fio, birth_date, gender):
         super(Person, self).__init__()
-        self.fio = arg.get('fio') 
-        self.birth_date = self.getDate(arg.get('birth_date')) 
-        self.gender = arg.get('gender')
+        self.fio = fio 
+        self.birth_date = self.getDate(birth_date) 
+        self.gender = gender
         self.age = self.getAge()
 
     def getDate(self, date) -> str:
         if date is None: return None
-        return datetime.strptime(date, '%Y-%m-%d').date()
+        return datetime.strptime(str(date), '%Y-%m-%d').date()
 
     def getAge(self) -> str:
         # проверка на пустоту
@@ -35,13 +36,29 @@ class Person(Base):
 
     def to_dict(self) -> dict:
         return {
-            "full_name": self.full_name,
+            "full_name": self.fio,
             "birth_date": self.birth_date.strftime("%Y-%m-%d"),
             "gender": self.gender,
             "age": self.getAge()
         }
 
+    def to_string(self) -> str:
+        return f"ФИО: {self.fio}, Дата рождения: {self.birth_date}, Пол: {self.gender}, кол-во полных лет: {self.getAge()}"
+
 
 # Создаём подключение к базе данных
-engine = create_engine('sqlite:///people.db')
+new_sqlite = 'sqlite:///people.db'
+
+# Для тестирования
+# sqlite = 'sqlite:///base_test/people_big.db'
+# sqlite_fast = 'sqlite:///base_test/people_big_fast.db'
+# postgress = 'postgresql://postgres:postgres@localhost:5432/test'
+
+# Обычный движок
+engine = create_engine(new_sqlite)
+
+# Асинхронный
+async_engine = create_async_engine("sqlite+aiosqlite:///people_big.db")
+
 Base.metadata.create_all(engine)
+
