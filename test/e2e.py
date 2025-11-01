@@ -14,7 +14,7 @@ def test_mode_1_create_table():
         capture_output=True,
         text=True
     )
-    assert "База успешно создана" in result.stdout, f"Ошибка: {result.stderr}"
+    assert "The database has been successfully created" in result.stdout, f"Ошибка: {result.stderr}"
 
 
 def test_mode_2_1_add_employee():
@@ -25,7 +25,7 @@ def test_mode_2_1_add_employee():
         capture_output=True,
         text=True
     )
-    assert "1 Запись добавленна" in result.stdout, f"Ошибка: {result.stderr}"
+    assert "1 line added" in result.stdout, f"Ошибка: {result.stderr}"
 
 
 def test_mode_2_2_add_employee():
@@ -36,7 +36,7 @@ def test_mode_2_2_add_employee():
         capture_output=True,
         text=True
     )
-    assert "2 Записи добавленно" in result.stdout, f"Ошибка: {result.stderr}"
+    assert "2 lines added" in result.stdout, f"Ошибка: {result.stderr}"
 
 
 def test_mode_3_list_employees():
@@ -76,6 +76,6 @@ def test_mode_5_query_by_criteria():
         capture_output=True,
         text=True
     )
-    assert "сек Затрачено на выполнение запроса" in result.stdout, f"Ошибка: {result.stderr}"
+    assert "seconds spent on request execution" in result.stdout, f"Ошибка: {result.stderr}"
     # Проверяем, что в выводе есть мужчины с фамилией на F
     assert re.search(r"ФИО: F\w+ \w+ \w+, Дата рождения: \d{4}-\d{2}-\d{2}, Пол: Male, кол-во полных лет: \d+", result.stdout), f"Ошибка: {result.stderr}"

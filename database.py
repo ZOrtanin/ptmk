@@ -9,7 +9,7 @@ class BaseDB:
         self.Session = sessionmaker(bind=model.engine)
 
     def create_partial_index(self) -> None:
-        ''' Добовляем индексы в базу '''
+        ''' Добавляем индексы в базу '''
 
         session = self.Session()
         query = text("""
@@ -36,9 +36,9 @@ class BaseDB:
 
             session.add(person)
             session.commit()
-            print(f"Запись: {self.fio}, {self.birth_date}, {self.gender}")
+            print(f"line: {self.fio}, {self.birth_date}, {self.gender}")
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f"Error: {e}")
             session.rollback()
             return False
         finally:
@@ -56,11 +56,11 @@ class BaseDB:
 
             # Фиксируем изменения
             session.commit()
-            result = f" {len(arr)} Запись добавленна" if len(arr) == 1 else f" {len(arr)} Записи добавленно"
+            result = f" {len(arr)} line added" if len(arr) == 1 else f" {len(arr)} lines added"
             print(result)
 
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f"Error: {e}")
             session.rollback()
             return False
         finally:
@@ -68,13 +68,13 @@ class BaseDB:
 
         return True
 
-    def dataGet(self, filters=None, custom_filters=None, order=None) -> object:
+    def dataGet(self, filters=None, custom_filters=None, order=None) -> list[model.Person]:
         ''' Получаем составной запрос к базе в ответ объекты '''
 
         # Открываем сессию
         session = self.Session()
 
-        # Собераем запрос
+        # Собираем запрос
         query = session.query(model.Person)
 
         if filters:

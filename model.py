@@ -1,7 +1,8 @@
+# from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import create_engine, Column, String, Date, Integer
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import create_async_engine
 from datetime import datetime
+from datetime import date
 
 # Определяем базовую модель
 Base = declarative_base()
@@ -21,7 +22,7 @@ class Person(Base):
         self.gender = gender
         self.age = self.getAge()
 
-    def getDate(self, date) -> str:
+    def getDate(self, date) -> date:
         if date is None: return None
         return datetime.strptime(str(date), '%Y-%m-%d').date()
 
@@ -37,7 +38,7 @@ class Person(Base):
     def to_dict(self) -> dict:
         return {
             "full_name": self.fio,
-            "birth_date": self.birth_date.strftime("%Y-%m-%d"),
+            "birth_date": self.birth_date,
             "gender": self.gender,
             "age": self.getAge()
         }
@@ -49,16 +50,13 @@ class Person(Base):
 # Создаём подключение к базе данных
 new_sqlite = 'sqlite:///people.db'
 
+# Обычный движок
+engine = create_engine(new_sqlite)
+Base.metadata.create_all(engine)
+
 # Для тестирования
 # sqlite = 'sqlite:///base_test/people_big.db'
 # sqlite_fast = 'sqlite:///base_test/people_big_fast.db'
 # postgress = 'postgresql://postgres:postgres@localhost:5432/test'
-
-# Обычный движок
-engine = create_engine(new_sqlite)
-
 # Асинхронный
-async_engine = create_async_engine("sqlite+aiosqlite:///people_big.db")
-
-Base.metadata.create_all(engine)
-
+# async_engine = create_async_engine("sqlite+aiosqlite:///people_big.db")

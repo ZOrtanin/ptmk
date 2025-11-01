@@ -1,6 +1,6 @@
 import sys
 import time
-import argparse
+#import argparse
 import random
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker
@@ -11,18 +11,18 @@ import model, database
 # Создаём объект базы данных
 db = database.BaseDB(True)
 
-# добовляем индексы в базу если их нет
+# добавляем индексы в базу, если их нет
 db.create_partial_index()
 
 # Создаём объект Faker для русского языка
 fake = Faker('ru_RU')
 
-# Счетчик рандомных фамилий
+# Счётчик рандомных фамилий
 letter_count = 0
 
 
 # mode 0
-def help(error=False, mode=None):
+def help(error=False, mode=None) -> None:
     if error: print('        ### please enter the arguments ###')
     mode_1 = '''
     mode [1] -  Create a database
@@ -32,10 +32,10 @@ def help(error=False, mode=None):
     mode [2] -  Add to the database
                 arguments: ["fio"] [date] [gendr]
                 Example:
-                    add piople: 
+                    add human: 
                      "fio" 1987-02-15 Male
                 
-                    add pioples: 
+                    add humans: 
                         "fio" 1987-02-15 Male "fio" 1987-02-15 Male
              '''
     mode_3 = '''
@@ -100,37 +100,36 @@ def help(error=False, mode=None):
 
 
 # mode 2
-def addPeoples(arg):
-    ''' Функция добовления людей '''
+def addPeople(arg) -> None:
+    ''' Функция добавления людей '''
 
     if (len(arg) == 2):         
         return help(True, 2)
 
     # add_obj = People({})
-    peoples = []
+    people = []
     row = []   
 
     for i, item in enumerate(arg[2:], start=0):
         row.append(item)
 
-        if (len(row) == 3):
-            # peoples.append(row[:])
+        if (len(row) == 3):            
             human = model.Person(
                             fio=translateStr(row[0]), 
                             birth_date=datetime.strptime(row[1], '%Y-%m-%d').date(), 
                             gender=row[2]
                             )
-            peoples.append(human) 
+            people.append(human) 
             print(row)               
             row = []  
 
     if len(arg[2:]) > 0 and len(arg[2:])%3:
         print(row)
-        print('колличество полей не совподает')
+        print('the number of fields does not match')
         return       
 
-    if (db.addTableArr(peoples)):
-        print('-- успешно --')
+    if (db.addTableArr(people)):
+        print('-- successfully --')
 
 
 # mode 3
@@ -144,7 +143,7 @@ def getAll() -> None:
 
 
 # mode 4 
-def addRandomPeoples(arg) -> None:
+def addRandomPeople(arg) -> None:
     
     if len(arg) >= 3:
         if int(arg[2]): 
@@ -152,7 +151,9 @@ def addRandomPeoples(arg) -> None:
         else:
             addRandom(100, True)
     else:
-        help(True, 4)
+        help(False, 4)        
+        addRandom(1000000, False)
+        addRandom(100, True)
 
 
 # mode 5
@@ -182,19 +183,18 @@ def getMaleF(arg) -> None:
     # custom_filters = [
     #     model.Person.fio.startswith(letter)  # Фильтр: фамилия начинается на "F"
     # ]
-    # peoples = db.dataGet(filters, custom_filters) <--- для тестирования
+    # people = db.dataGet(filters, custom_filters) <--- для тестирования
 
-    peoples = db.dataGetRaw(gender, letter)
+    people = db.dataGetRaw(gender, letter)
     
     if print_list:
-        for person in peoples:
-            new_people = model.Person(person[1], person[2], person[3])
-            print(new_people.to_string())
-            # print(person.to_string())
+        for person in people:
+            human = model.Person(person[1], person[2], person[3])
+            print(human.to_string())            
     
     if print_time:        
-        print(round(time.time() - starttime, 5), "сек Затрачено на выполнение запроса")
-        print(len(peoples), '- количество полученных строк')
+        print(round(time.time() - starttime, 5), "seconds spent on request execution")
+        print(len(people), '- count get lines')
 
     print()
     help(True, 5)
@@ -214,8 +214,8 @@ def getAllLetter() -> None:
             model.Person.fio.startswith(letter) 
         ]
 
-        peoples = db.dataGet(None, custom_filters)
-        print(len(peoples), f"колличество - {letter}")
+        people = db.dataGet(None, custom_filters)
+        print(len(people), f"quantity - {letter}")
 
 
 # mode 7
@@ -234,7 +234,7 @@ def getAllMale() -> None:
     people = db.dataGet(filters, custom_filters)
     print(len(people), 'Женщин')
 
-    print(round(time.time() - starttime, 5), "сек Затрачено на выполнение запроса")
+    print(round(time.time() - starttime, 5), "seconds spent on request execution")
 
 
 # mode 8
@@ -243,7 +243,7 @@ def addRandom(count=100, f=False, arg=None) -> None:
     if arg != None and len(arg) == 2:         
         return help(True, 8)
 
-    print('Начинаем заполнение')
+    print('Starting filling in')
 
     if arg is not None:
         if len(arg) > 2:
@@ -253,7 +253,7 @@ def addRandom(count=100, f=False, arg=None) -> None:
             f = bool(int(arg[3]))
 
     if (f):
-        print('Заполняем только мужчин c F')
+        print('We fill in only men with F')
 
     # people = People({})
 
@@ -269,7 +269,7 @@ def addRandom(count=100, f=False, arg=None) -> None:
                     gender=fakedata['gender']
                     )
         new_people.append(human)
-        print('Заполнение:', i, end='\r')
+        print('Progress:', i, end='\r')
 
     db.addTableArr(new_people)
 
@@ -286,7 +286,7 @@ def testBase() -> None:
             model.Person.fio.startswith("F")  # Фильтр: фамилия начинается на "F"
         ]
 
-        peoples = db.dataGetRaw(filters, custom_filters)
+        people = db.dataGetRaw(filters, custom_filters)
 
         print(round(time.time() - starttime, 5), "сек")
     
@@ -332,8 +332,11 @@ def fakeData(gen=0, nameF=False, gender=None, attempts=0) -> dict:
     if (letter_count == len(arr)):
         letter_count = 0
 
-    # Собираем дату рождения ( fake - создает проблемы )
-    birth_date = f"{random.randint(1935, 2010)}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}"
+    # Генерируем дату рождения ( fake - создает проблемы )
+    day = random.randint(1, 28)
+    month = random.randint(1, 12)
+    year = random.randint(1935, 2010)
+    birth_date = f"{year}-{month:02d}-{day:02d}"
 
     # Определяем пол если он не задан и на основе этого генерируем ФИО
     if (gender is None):
@@ -371,10 +374,10 @@ def main() -> None:
 
     actions = {
             '0': lambda arg: help(),
-            '1': lambda arg: print('База успешно создана'),
-            '2': lambda arg: addPeoples(arg),
+            '1': lambda arg: print('The database has been successfully created'),
+            '2': lambda arg: addPeople(arg),
             '3': lambda arg: getAll(),
-            '4': lambda arg: addRandomPeoples(arg),
+            '4': lambda arg: addRandomPeople(arg),
             '5': lambda arg: getMaleF(arg),
             '6': lambda arg: getAllLetter(),
             '7': lambda arg: getAllMale(),
@@ -389,4 +392,4 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print("\nПрограмма остановлена.")
+        print("\n\n The program is stopped.")
